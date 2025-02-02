@@ -51,7 +51,8 @@ Return only the category name: 'Animal Bite-Related' or 'Not Animal Bite-Related
 #chat bot stuff 
 embeddings_model = OpenAIEmbeddings(model="text-embedding-3-large",api_key=os.environ["OPENAI_KEY"])
 llm=ChatOpenAI(model="gpt-3.5-turbo-0125",temperature=0,api_key=os.environ["OPENAI_KEY"])
-smaller_llm=ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0125",api_key=os.environ["OPENAI_KEY"])
+smaller_llm=ChatOpenAI(temperature=0, model="gpt-4o-mini",api_key=os.environ["OPENAI_KEY"])
+larger_llm=ChatOpenAI(temperature=0, model="gpt-4o",api_key=os.environ["OPENAI_KEY"])
 
 #mongodb initialization
 client = MongoClient(os.getenv("MONGODB_URI"))
@@ -67,14 +68,15 @@ def process_input():
 
     if user_input:
         #converting user input into standalone prompt
-        retrival_prompt_template=f"""Given a chat history and the latest user question \
-which might reference context in the chat history, formulate a standalone question \
+        retrival_prompt_template=f"""Given a chat history and the latest user question/statement \
+which MIGHT reference context in the chat history, formulate a standalone question/statement \
 which can be understood without the chat history. Do NOT answer the question, \
 just reformulate it if needed and otherwise return it as is.
-chat_history: {st.session_state.chat_history}
-latest_user_input:{user_input}"""
+chat_history: {st.session_state.chat_history }
+latest_user_input:{user_input}""" 
+        
 
-        modified_user_input=llm.invoke(retrival_prompt_template).content
+        modified_user_input=larger_llm.invoke(retrival_prompt_template).content
         print(modified_user_input)
 
         #casual or subject related?
