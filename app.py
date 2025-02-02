@@ -68,12 +68,12 @@ def process_input():
 
     if user_input:
         #converting user input into standalone prompt
-        retrival_prompt_template=f"""Given a chat history and the latest user question/statement \
+        retrival_prompt_template=f"""Given a chat_history and the latest_user_input question/statement \
 which MIGHT reference context in the chat history, formulate a standalone question/statement \
 which can be understood without the chat history. Do NOT answer the question, \
-just reformulate it if needed and otherwise return it as is.
+If the latest_user_input is a pleasantry (e.g., 'thank you', 'thanks', 'got it', 'okay'), return it as is without modification. Otherwise, ensure the reformulated version is self-contained.\
 chat_history: {st.session_state.chat_history }
-latest_user_input:{user_input}""" 
+latest_user_input:{user_input}"""#st.session_state.chat_history[-1] if st.session_state.chat_history else 
         
 
         modified_user_input=larger_llm.invoke(retrival_prompt_template).content
