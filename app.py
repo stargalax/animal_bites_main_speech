@@ -51,7 +51,7 @@ Return only the category name: 'Animal Bite-Related' or 'Not Animal Bite-Related
 #chat bot stuff 
 embeddings_model = OpenAIEmbeddings(model="text-embedding-3-large",api_key=os.environ["OPENAI_KEY"])
 llm=ChatOpenAI(model="gpt-3.5-turbo-0125",temperature=0,api_key=os.environ["OPENAI_KEY"])
-smaller_llm=ChatOpenAI(temperature=0, model="gpt-4o-mini",api_key=os.environ["OPENAI_KEY"])
+smaller_llm=ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0125",api_key=os.environ["OPENAI_KEY"])
 
 #mongodb initialization
 client = MongoClient(os.getenv("MONGODB_URI"))
