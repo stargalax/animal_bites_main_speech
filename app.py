@@ -10,6 +10,10 @@ import re
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 import smtplib
+from streamlit.components.v1 import html
+from gtts import gTTS
+import hashlib
+
 
 print(dotenv.load_dotenv())
 
@@ -157,15 +161,34 @@ latest_user_input:{user_input}"""#st.session_state.chat_history[-1] if st.sessio
         st.session_state.chat_history.append((user_input, bot_response))
         st.session_state.user_input = ""
 
+
 def display_chat():
-    # Display chat messages
+    os.makedirs("tts_audio", exist_ok=True)
+
     for i, (user_msg, bot_msg) in enumerate(st.session_state.chat_history):
         message(user_msg, is_user=True, key=f"user_msg_{i}")
         message(bot_msg, key=f"bot_msg_{i}")
 
+        # Create a unique filename based on message hash to avoid regeneration
+        text_hash = hashlib.md5(bot_msg.encode()).hexdigest()
+        audio_file_path = f"tts_audio/{text_hash}.mp3"
+
+        # Generate TTS only if file doesn't exist
+        if not os.path.exists(audio_file_path):
+            tts = gTTS(bot_msg)
+            tts.save(audio_file_path)
+
+        # Display audio player
+        with st.container():
+            audio_file = open(audio_file_path, "rb")
+            audio_bytes = audio_file.read()
+            st.audio(audio_bytes, format="audio/mp3")
+
+
+
 def main():
     st.title("Chatbot for Animal Bites")
-
+    
     # Chat display container
     chat_container = st.container()
     with chat_container:
