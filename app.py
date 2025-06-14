@@ -109,7 +109,7 @@ latest_user_input:{user_input}"""#st.session_state.chat_history[-1] if st.sessio
                 db_embedding=i["embeddings"]
                 val=cosine_similarity([db_embedding],[embedding])[0][0]
                 print(round(val,2))
-                if round(val,2)>=0.44:
+                if round(val,2)>=0.55:
                     context=context+i["raw_data"]+"\n\n"
             print(len(context))
 
