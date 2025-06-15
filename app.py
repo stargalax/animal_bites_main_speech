@@ -13,6 +13,16 @@ import smtplib
 from streamlit.components.v1 import html
 from gtts import gTTS
 import hashlib
+#voic to speech
+from voice import speech_to_text
+import queue
+import threading
+import tempfile
+import numpy as np
+from streamlit_webrtc import webrtc_streamer, WebRtcMode
+import av
+import speech_recognition as sr
+from scipy.io.wavfile import write
 
 
 print(dotenv.load_dotenv())
@@ -183,6 +193,43 @@ def display_chat():
             audio_file = open(audio_file_path, "rb")
             audio_bytes = audio_file.read()
             st.audio(audio_bytes, format="audio/mp3")
+#voice code
+audio_q = queue.Queue()
+
+def audio_frame_callback(frame: av.AudioFrame):
+    audio = frame.to_ndarray(format="flt32").flatten()
+    audio_q.put(audio)
+    return frame
+
+def recognize_audio_queue():
+    r = sr.Recognizer()
+    while True:
+        if not audio_q.empty():
+            audio_data = audio_q.get()
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as f:
+                # Convert float32 to int16 wav format
+                write(f.name, 48000, (audio_data * 32767).astype(np.int16))
+                with sr.AudioFile(f.name) as source:
+                    audio = r.record(source)
+                    try:
+                        text = r.recognize_google(audio)
+                        st.session_state.user_input = text
+                        st.experimental_rerun()
+                        break
+                    except Exception:
+                        pass
+
+def voice_input_webrtc():
+    st.subheader("🎤 Speak Now (Click Start & Speak)")
+    ctx = webrtc_streamer(
+        key="audio-recorder",
+        mode=WebRtcMode.SENDRECV,
+        media_stream_constraints={"audio": True, "video": False},
+        audio_frame_callback=audio_frame_callback,
+        async_processing=True,
+    )
+    if ctx.state.playing:
+        threading.Thread(target=recognize_audio_queue, daemon=True).start()
 
 
 
@@ -193,6 +240,11 @@ def main():
     chat_container = st.container()
     with chat_container:
         display_chat()
+
+    #voie
+    voice_input_webrtc()
+
+    
     st.text_input(
         "Type something...",
         key="user_input",
